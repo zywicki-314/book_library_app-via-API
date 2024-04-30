@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { v4 as uuidv4 } from 'uuid';
-import { addBook } from '../../redux/books/actionCreators';
+import { addBook, fetchBook } from '../../redux/slices/booksSlice';
+import { setError } from '../../redux/slices/errorSlice';
+import booksData from '../../data/books.json';
+import createBookWithID from '../../utils/createBookWithID';
 import './BookForm.css';
 
 const BookForm = () => {
@@ -9,22 +11,29 @@ const BookForm = () => {
   const [author, setauthor] = useState('');
   const dispatch = useDispatch();
 
+  const handleAddRandomBook = () => {
+    const randomIndex = Math.floor(Math.random() * booksData.length);
+    const randomBook = booksData[randomIndex];
+
+    dispatch(addBook(createBookWithID(randomBook, 'random')));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (title && author) {
-      const book = {
-        title,
-        author,
-        id: uuidv4(),
-      };
-
-      dispatch(addBook(book));
-
+      dispatch(addBook(createBookWithID({ title, author }, 'manual')));
       setTitle('');
       setauthor('');
+    } else {
+      dispatch(setError('You must fill title and author!'));
     }
   };
+
+  const handleAddRandomBookViaAPI = () => {
+    dispatch(fetchBook('http://localhost:4000/random-book'));
+  };
+
   return (
     <div className="app-block book-form">
       <h2>Add a New Book</h2>
@@ -48,6 +57,12 @@ const BookForm = () => {
           />
         </div>
         <button type="submit">Add Book</button>
+        <button type="button" onClick={handleAddRandomBook}>
+          Add Random
+        </button>
+        <button type="button" onClick={handleAddRandomBookViaAPI}>
+          Add Random via API
+        </button>
       </form>
     </div>
   );
